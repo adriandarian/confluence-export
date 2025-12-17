@@ -75,8 +75,12 @@ Examples:
         "--pages",
         nargs="+",
         metavar="PAGE",
-        required=True,
         help="Page IDs or URLs to export. Can specify multiple pages.",
+    )
+    page_group.add_argument(
+        "--space",
+        metavar="SPACE_KEY",
+        help="Export all pages from a space (e.g., 'MYSPACE').",
     )
     page_group.add_argument(
         "--include-children",
@@ -321,18 +325,38 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"Error: Failed to create Confluence client: {e}", file=sys.stderr)
         return 1
     
+    # Validate that either --pages or --space is provided
+    if not args.pages and not args.space:
+        print("Error: You must specify either --pages or --space.", file=sys.stderr)
+        return 1
+    
     # Parse page IDs
     page_ids = []
-    for page_input in args.pages:
-        page_id = extract_page_id_from_url(page_input)
-        if page_id:
-            page_ids.append(page_id)
-        else:
-            # Assume it's already a page ID
-            page_ids.append(page_input)
+    if args.pages:
+        for page_input in args.pages:
+            page_id = extract_page_id_from_url(page_input)
+            if page_id:
+                page_ids.append(page_id)
+            else:
+                # Assume it's already a page ID
+                page_ids.append(page_input)
+    
+    # If space is specified, fetch all pages from the space
+    if args.space:
+        if not args.quiet:
+            print(f"Fetching pages from space '{args.space}'...")
+        try:
+            space_pages = client.get_space_pages(args.space)
+            space_page_ids = [str(p.get("id")) for p in space_pages if p.get("id")]
+            if not args.quiet:
+                print(f"Found {len(space_page_ids)} pages in space '{args.space}'")
+            page_ids.extend(space_page_ids)
+        except ConfluenceAPIError as e:
+            print(f"Error: Failed to fetch pages from space '{args.space}': {e}", file=sys.stderr)
+            return 1
     
     if not page_ids:
-        print("Error: No valid page IDs provided.", file=sys.stderr)
+        print("Error: No valid page IDs found.", file=sys.stderr)
         return 1
     
     # Normalize formats
@@ -341,6 +365,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     if not args.quiet:
         print(f"Confluence Export v{__version__}")
         print(f"Base URL: {base_url}")
+        if args.space:
+            print(f"Space: {args.space}")
         print(f"Pages to export: {len(page_ids)}")
         print(f"Formats: {', '.join(formats)}")
         print(f"Include children: {args.include_children}")

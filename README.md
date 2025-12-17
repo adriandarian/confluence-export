@@ -114,6 +114,16 @@ confluence-export --pages 12345 --include-children --format markdown
 confluence-export --pages 12345 67890 --include-children --format markdown
 ```
 
+### Exporting an Entire Space
+
+```bash
+# Export all pages from a space
+confluence-export --space MYSPACE --format markdown
+
+# Export a space to multiple formats
+confluence-export --space DOCS --format markdown html pdf --output ./space-backup
+```
+
 ### Output Options
 
 ```bash
@@ -144,6 +154,7 @@ Authentication:
 
 Page Selection:
   --pages PAGE [PAGE ...] Page IDs or URLs to export. Can specify multiple.
+  --space SPACE_KEY     Export all pages from a space (e.g., 'MYSPACE')
   --include-children    Recursively export all child pages
 
 Export Options:

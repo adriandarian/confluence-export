@@ -72,6 +72,8 @@ Thumbs.db
 
 # Project specific
 confluence-exports/
-*.pdf
 *.log
+
+# Don't ignore PDFs that might be source files, but ignore egg-info
+*.egg-info/
 

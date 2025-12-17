@@ -249,24 +249,59 @@ class ConfluenceClient:
     
     def export_page_as_pdf(self, page_id: str) -> bytes:
         """
-        Export a page as PDF using Confluence's built-in PDF export.
+        Export a page as PDF using Confluence's PDF export.
+        
+        Note: PDF export in Confluence Cloud requires the page to be accessed
+        via a special export URL. This method attempts multiple approaches.
         
         Args:
             page_id: The page ID to export
             
         Returns:
             PDF content as bytes
+            
+        Raises:
+            ConfluenceAPIError: If PDF export fails
         """
-        # Use v1 API for PDF export
-        endpoint = f"/content/{page_id}/export/pdf"
-        response = self._make_request(
-            "GET",
-            endpoint,
-            api_version="v1",
-            accept="application/pdf",
-            stream=True
+        # Confluence Cloud PDF export URL format
+        # Try the spaces/flyingpdf/pdfpageexport.action endpoint
+        pdf_url = f"{self.base_url}/wiki/spaces/flyingpdf/pdfpageexport.action?pageId={page_id}"
+        
+        try:
+            response = self.session.get(pdf_url, stream=True, timeout=60)
+            if response.status_code == 200 and 'pdf' in response.headers.get('Content-Type', '').lower():
+                return response.content
+        except requests.RequestException:
+            pass
+        
+        # Fallback: Try the REST API v1 content export
+        try:
+            endpoint = f"/content/{page_id}/export/pdf"
+            response = self._make_request(
+                "GET",
+                endpoint,
+                api_version="v1",
+                accept="application/pdf",
+                stream=True
+            )
+            return response.content
+        except ConfluenceAPIError:
+            pass
+        
+        # Last resort: Try direct PDF rendering endpoint
+        try:
+            pdf_url = f"{self.base_url}/wiki/exportword?pageId={page_id}&export=pdf"
+            response = self.session.get(pdf_url, stream=True, timeout=60)
+            if response.status_code == 200:
+                return response.content
+        except requests.RequestException:
+            pass
+        
+        raise ConfluenceAPIError(
+            f"PDF export is not available for page {page_id}. "
+            "This may require additional permissions or Confluence add-ons.",
+            status_code=501
         )
-        return response.content
     
     def get_space_pages(self, space_key: str, limit: int = 250) -> List[Dict[str, Any]]:
         """
