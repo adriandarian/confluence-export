@@ -2,6 +2,8 @@
 
 A powerful command-line tool to export Confluence pages to multiple formats (Markdown, HTML, Text, PDF) with support for bulk exports and recursive child page fetching.
 
+> 📖 **New to this tool?** Check out the [Complete User Guide](GUIDE.md) for detailed instructions, examples, and troubleshooting.
+
 ## Features
 
 - **Multiple Export Formats**: Export pages to Markdown, HTML, plain text, or PDF
@@ -321,6 +323,11 @@ confluence-export/
 ## License
 
 MIT License - see LICENSE file for details.
+
+## Documentation
+
+- [README.md](README.md) - Quick start and overview
+- [GUIDE.md](GUIDE.md) - Complete user guide with detailed examples
 
 ## Contributing
 
