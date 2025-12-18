@@ -1,0 +1,27 @@
+title: "[Discussion]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 💬 General Discussion
+        
+        Start a conversation about anything related to Confluence Export CLI!
+
+  - type: textarea
+    id: topic
+    attributes:
+      label: Topic
+      description: What would you like to discuss?
+      placeholder: I wanted to talk about...
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any additional details or background
+    validations:
+      required: false
+

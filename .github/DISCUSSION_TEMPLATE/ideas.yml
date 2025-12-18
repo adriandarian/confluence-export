@@ -1,0 +1,48 @@
+title: "[Idea]: "
+labels:
+  - idea
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 💡 Share Your Idea
+        
+        Have an idea for improving Confluence Export CLI? We'd love to hear it!
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your Idea
+      description: Describe your idea or suggestion
+      placeholder: I think it would be great if...
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Motivation
+      description: What problem does this solve or what's the motivation behind it?
+      placeholder: This would help with...
+    validations:
+      required: false
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Example
+      description: Show an example of how this might work
+      placeholder: |
+        ```bash
+        confluence-export --new-feature ...
+        ```
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution Interest
+      options:
+        - label: I'd be interested in helping implement this
+

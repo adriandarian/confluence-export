@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 Documentation
+    url: https://github.com/yourusername/confluence-export#readme
+    about: Check the README and GUIDE for usage instructions
+  - name: 🔒 Security Vulnerability
+    url: https://github.com/yourusername/confluence-export/security/policy
+    about: Please report security vulnerabilities privately
+

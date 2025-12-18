@@ -1,0 +1,54 @@
+title: "[Show & Tell]: "
+labels:
+  - show-and-tell
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🎉 Show & Tell
+        
+        Built something cool with Confluence Export CLI? Share it with the community!
+
+  - type: textarea
+    id: project
+    attributes:
+      label: What did you build?
+      description: Tell us about your project or use case
+      placeholder: I used confluence-export to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: how
+    attributes:
+      label: How does it work?
+      description: Share the details of your implementation
+      placeholder: |
+        I set up a script that...
+        
+        ```bash
+        # Example commands or code
+        ```
+    validations:
+      required: false
+
+  - type: textarea
+    id: lessons
+    attributes:
+      label: Tips & Lessons Learned
+      description: Any advice for others trying to do something similar?
+      placeholder: One thing I learned was...
+    validations:
+      required: false
+
+  - type: textarea
+    id: links
+    attributes:
+      label: Links
+      description: Share any relevant links (blog posts, repos, etc.)
+      placeholder: |
+        - GitHub: 
+        - Blog post:
+    validations:
+      required: false
+

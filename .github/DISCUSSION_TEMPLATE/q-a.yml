@@ -1,0 +1,54 @@
+title: "[Q&A]: "
+labels:
+  - question
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ❓ Questions & Answers
+        
+        Have a question about using Confluence Export CLI? Ask here!
+        
+        Before asking, please check:
+        - [README](https://github.com/yourusername/confluence-export#readme)
+        - [User Guide](https://github.com/yourusername/confluence-export/blob/main/GUIDE.md)
+        - [Existing discussions](https://github.com/yourusername/confluence-export/discussions)
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+      placeholder: How do I...?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Provide any relevant context
+      placeholder: I'm trying to export pages from...
+    validations:
+      required: false
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What I've Tried
+      description: What have you already attempted?
+      placeholder: |
+        - Checked the documentation
+        - Tried running...
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Which version are you using?
+      placeholder: "1.0.0"
+    validations:
+      required: false
+
