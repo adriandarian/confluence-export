@@ -6,20 +6,20 @@ from .base import BaseExporter
 
 class HTMLExporter(BaseExporter):
     """Export Confluence pages as HTML files."""
-    
+
     format_name = "html"
     file_extension = "html"
-    
+
     def __init__(
         self,
         output_dir: str,
         flat: bool = False,
         include_wrapper: bool = True,
-        include_styles: bool = True
+        include_styles: bool = True,
     ):
         """
         Initialize the HTML exporter.
-        
+
         Args:
             output_dir: Base output directory
             flat: If True, use flat structure
@@ -29,7 +29,7 @@ class HTMLExporter(BaseExporter):
         super().__init__(output_dir, flat)
         self.include_wrapper = include_wrapper
         self.include_styles = include_styles
-    
+
     def _get_styles(self) -> str:
         """Get CSS styles for the HTML document."""
         return """
@@ -124,20 +124,20 @@ class HTMLExporter(BaseExporter):
             }
         </style>
         """
-    
+
     def _wrap_html(self, content: str, title: str) -> str:
         """
         Wrap content in a full HTML document.
-        
+
         Args:
             content: The HTML content
             title: The page title
-            
+
         Returns:
             Complete HTML document
         """
         styles = self._get_styles() if self.include_styles else ""
-        
+
         return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -154,21 +154,20 @@ class HTMLExporter(BaseExporter):
 </body>
 </html>
 """
-    
+
     def convert(self, page: PageData) -> bytes:
         """
         Convert page content to HTML.
-        
+
         Args:
             page: The page data to convert
-            
+
         Returns:
             HTML content as bytes
         """
         content = page.body_storage
-        
+
         if self.include_wrapper:
             content = self._wrap_html(content, page.title)
-        
-        return content.encode("utf-8")
 
+        return content.encode("utf-8")
