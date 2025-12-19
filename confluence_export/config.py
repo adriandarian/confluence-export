@@ -147,7 +147,7 @@ class Config:
         """
         lines = [
             "# Confluence Export Configuration",
-            "# See: https://github.com/yourusername/confluence-export",
+            "# See: https://github.com/adriandarian/confluence-export",
             "",
         ]
 

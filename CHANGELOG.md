@@ -102,6 +102,6 @@ This is the first production-ready release of Confluence Export CLI, a powerful 
 
 ---
 
-[1.0.0]: https://github.com/yourusername/confluence-export/releases/tag/v1.0.0
-[Unreleased]: https://github.com/yourusername/confluence-export/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/adriandarian/confluence-export/releases/tag/v1.0.0
+[Unreleased]: https://github.com/adriandarian/confluence-export/compare/v1.0.0...HEAD
 

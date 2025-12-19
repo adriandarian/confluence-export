@@ -51,7 +51,7 @@ dev = [
 confluence-export = "confluence_export.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/confluence-export"
+Homepage = "https://github.com/adriandarian/confluence-export"
 
 [tool.ruff]
 target-version = "py38"

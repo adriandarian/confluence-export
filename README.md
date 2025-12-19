@@ -3,7 +3,7 @@
 [![PyPI version](https://badge.fury.io/py/confluence-export.svg)](https://badge.fury.io/py/confluence-export)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/yourusername/confluence-export/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/confluence-export/actions/workflows/ci.yml)
+[![CI](https://github.com/adriandarian/confluence-export/actions/workflows/ci.yml/badge.svg)](https://github.com/adriandarian/confluence-export/actions/workflows/ci.yml)
 
 A powerful command-line tool to export Confluence pages to multiple formats (Markdown, HTML, Text, PDF) with support for bulk exports, parallel fetching, and recursive child page fetching.
 
@@ -34,7 +34,7 @@ pip install confluence-export
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/confluence-export.git
+git clone https://github.com/adriandarian/confluence-export.git
 cd confluence-export
 
 # Install the package
