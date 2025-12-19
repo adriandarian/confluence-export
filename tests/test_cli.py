@@ -11,6 +11,7 @@ from confluence_export.cli import (
     get_auth_config,
     main,
     normalize_formats,
+    read_pages_from_file,
 )
 
 
@@ -216,6 +217,116 @@ class TestCreateExporters:
         exporters = create_exporters(["markdown"], temp_output_dir, flat=True)
 
         assert exporters["markdown"].flat is True
+
+
+class TestReadPagesFromFile:
+    """Tests for reading pages from file."""
+
+    def test_read_simple_file(self, tmp_path):
+        """Test reading a simple file with page IDs."""
+        pages_file = tmp_path / "pages.txt"
+        pages_file.write_text("123456\n789012\n345678\n", encoding="utf-8")
+
+        result = read_pages_from_file(str(pages_file))
+
+        assert result == ["123456", "789012", "345678"]
+
+    def test_read_file_with_urls(self, tmp_path):
+        """Test reading a file with full URLs."""
+        pages_file = tmp_path / "pages.txt"
+        content = """https://mysite.atlassian.net/wiki/spaces/DOCS/pages/123/Page+One
+https://mysite.atlassian.net/wiki/spaces/DOCS/pages/456/Page+Two
+"""
+        pages_file.write_text(content, encoding="utf-8")
+
+        result = read_pages_from_file(str(pages_file))
+
+        assert len(result) == 2
+        assert "pages/123" in result[0]
+        assert "pages/456" in result[1]
+
+    def test_read_file_with_comments(self, tmp_path):
+        """Test that comment lines are ignored."""
+        pages_file = tmp_path / "pages.txt"
+        content = """# This is a comment
+123456
+# Another comment
+789012
+"""
+        pages_file.write_text(content, encoding="utf-8")
+
+        result = read_pages_from_file(str(pages_file))
+
+        assert result == ["123456", "789012"]
+
+    def test_read_file_with_empty_lines(self, tmp_path):
+        """Test that empty lines are ignored."""
+        pages_file = tmp_path / "pages.txt"
+        content = """123456
+
+789012
+
+345678
+"""
+        pages_file.write_text(content, encoding="utf-8")
+
+        result = read_pages_from_file(str(pages_file))
+
+        assert result == ["123456", "789012", "345678"]
+
+    def test_read_file_with_comma_separated(self, tmp_path):
+        """Test reading comma-separated values."""
+        pages_file = tmp_path / "pages.txt"
+        pages_file.write_text("123456, 789012, 345678\n", encoding="utf-8")
+
+        result = read_pages_from_file(str(pages_file))
+
+        assert result == ["123456", "789012", "345678"]
+
+    def test_read_nonexistent_file_raises(self, tmp_path):
+        """Test that reading non-existent file raises error."""
+        with pytest.raises(FileNotFoundError):
+            read_pages_from_file(str(tmp_path / "nonexistent.txt"))
+
+    def test_read_mixed_content(self, tmp_path):
+        """Test reading a file with mixed content."""
+        pages_file = tmp_path / "pages.txt"
+        content = """# Documentation pages
+https://mysite.atlassian.net/wiki/spaces/DOCS/pages/123/Overview
+
+# Feature pages
+456789
+111222, 333444
+
+# More pages
+https://mysite.atlassian.net/wiki/spaces/TEAM/pages/555/Team+Page
+"""
+        pages_file.write_text(content, encoding="utf-8")
+
+        result = read_pages_from_file(str(pages_file))
+
+        assert len(result) == 5
+
+
+class TestPagesFileArgument:
+    """Tests for --pages-file CLI argument."""
+
+    def test_pages_file_argument(self):
+        """Test that --pages-file argument is accepted."""
+        parser = create_parser()
+        args = parser.parse_args(["--pages-file", "pages.txt"])
+
+        assert args.pages_file == "pages.txt"
+
+    def test_pages_and_pages_file_combined(self):
+        """Test combining --pages and --pages-file."""
+        parser = create_parser()
+        args = parser.parse_args(
+            ["--pages", "123", "456", "--pages-file", "more-pages.txt"]
+        )
+
+        assert args.pages == ["123", "456"]
+        assert args.pages_file == "more-pages.txt"
 
 
 class TestMainFunction:

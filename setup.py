@@ -1,12 +1,16 @@
 """Setup script for Confluence Export CLI."""
 
-from setuptools import setup, find_packages
+from pathlib import Path
 
-with open("README.md", "r", encoding="utf-8") as f:
-    long_description = f.read()
+from setuptools import find_packages, setup
 
-with open("requirements.txt", "r", encoding="utf-8") as f:
-    requirements = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+long_description = Path("README.md").read_text(encoding="utf-8")
+requirements_text = Path("requirements.txt").read_text(encoding="utf-8")
+requirements = [
+    line.strip()
+    for line in requirements_text.splitlines()
+    if line.strip() and not line.startswith("#")
+]
 
 setup(
     name="confluence-export",
