@@ -318,7 +318,7 @@ To add a new export format:
 
 3. Add tests in `tests/test_exporters.py`
 
-4. Update documentation in `README.md` and `GUIDE.md`
+4. Update documentation in `README.md` and `docs/`
 
 ## Questions?
 

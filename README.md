@@ -1,294 +1,313 @@
 # Confluence Export CLI
 
-A powerful command-line tool to export Confluence pages to multiple formats (Markdown, HTML, Text, PDF) with support for bulk exports and recursive child page fetching.
+[![PyPI version](https://badge.fury.io/py/confluence-export.svg)](https://badge.fury.io/py/confluence-export)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/yourusername/confluence-export/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/confluence-export/actions/workflows/ci.yml)
 
-> 📖 **New to this tool?** Check out the [Complete User Guide](GUIDE.md) for detailed instructions, examples, and troubleshooting.
+A powerful command-line tool to export Confluence pages to multiple formats (Markdown, HTML, Text, PDF) with support for bulk exports, parallel fetching, and recursive child page fetching.
+
+> 📖 **New to this tool?** Check out the [User Guide](docs/user-guide.md) for detailed instructions, examples, and troubleshooting.
 
 ## Features
 
 - **Multiple Export Formats**: Export pages to Markdown, HTML, plain text, or PDF
-- **Bulk Export**: Export multiple pages at once
+- **Bulk Export**: Export multiple pages at once with parallel fetching
 - **Recursive Export**: Automatically include all child pages with `--include-children`
+- **Space Export**: Export entire Confluence spaces with `--space`
+- **Flexible Input**: Accept page IDs, full URLs, or read from a file
+- **Parallel Processing**: Fast exports with configurable worker threads
+- **Progress Display**: Beautiful progress bars and status updates with Rich
+- **Export Manifest**: Generate an index of all exported pages
+- **Configuration Files**: Save settings in `.confluence-export.toml`
 - **Flexible Output**: Choose between flat or hierarchical folder structures
-- **Confluence Cloud Support**: Works with Confluence Cloud (*.atlassian.net)
-- **URL or ID Input**: Accept page IDs or full Confluence URLs
 
 ## Installation
 
-### Prerequisites
+### From PyPI (Recommended)
 
-- Python 3.8 or higher
-- A Confluence Cloud account with API token access
+```bash
+pip install confluence-export
+```
 
-### Install from Source
+### From Source
 
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/confluence-export.git
 cd confluence-export
 
-# Create a virtual environment (recommended)
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
 # Install the package
 pip install -e .
 ```
 
-### Install Dependencies Only
+## Quick Start
 
-```bash
-pip install -r requirements.txt
-```
-
-## Authentication
-
-### Getting Your API Token
+### 1. Get Your API Token
 
 1. Go to [Atlassian API Tokens](https://id.atlassian.com/manage-profile/security/api-tokens)
 2. Click "Create API token"
-3. Give it a label (e.g., "confluence-export")
-4. Copy the generated token
+3. Copy the generated token
 
-### Providing Credentials
-
-You can provide credentials in three ways:
-
-#### 1. Command-line Arguments
+### 2. Set Up Authentication
 
 ```bash
-confluence-export \
-  --base-url https://yoursite.atlassian.net \
-  --email your.email@example.com \
-  --token your-api-token \
-  --pages 12345
-```
-
-#### 2. Environment Variables
-
-```bash
+# Option 1: Environment variables (recommended)
 export CONFLUENCE_BASE_URL=https://yoursite.atlassian.net
 export CONFLUENCE_EMAIL=your.email@example.com
 export CONFLUENCE_API_TOKEN=your-api-token
 
-confluence-export --pages 12345
+# Option 2: Create a .env file
+echo "CONFLUENCE_BASE_URL=https://yoursite.atlassian.net" >> .env
+echo "CONFLUENCE_EMAIL=your.email@example.com" >> .env
+echo "CONFLUENCE_API_TOKEN=your-api-token" >> .env
 ```
 
-#### 3. `.env` File
-
-Create a `.env` file in your working directory:
-
-```env
-CONFLUENCE_BASE_URL=https://yoursite.atlassian.net
-CONFLUENCE_EMAIL=your.email@example.com
-CONFLUENCE_API_TOKEN=your-api-token
-```
-
-## Usage
-
-### Basic Usage
+### 3. Export Pages
 
 ```bash
-# Export a single page as Markdown
-confluence-export --pages 12345 --format markdown
+# Export using a full Confluence URL
+confluence-export --pages "https://yoursite.atlassian.net/wiki/spaces/DOCS/pages/123456789/My+Page"
 
-# Export using a Confluence URL
-confluence-export --pages "https://yoursite.atlassian.net/wiki/spaces/SPACE/pages/12345/Page+Title" --format markdown
-```
-
-### Multiple Pages
-
-```bash
 # Export multiple pages
-confluence-export --pages 12345 67890 11111 --format markdown
+confluence-export --pages 123456 789012 --format markdown html
 
-# Export to multiple formats
-confluence-export --pages 12345 --format markdown html pdf
+# Export from a file containing URLs/IDs
+confluence-export --pages-file pages.txt --format markdown
+
+# Export an entire space
+confluence-export --space DOCS --format markdown --output ./backup
 ```
 
-### Including Child Pages
+## Page Selection Options
+
+### Using URLs (Recommended)
+
+Full Confluence URLs are automatically parsed:
 
 ```bash
-# Export a page and all its children
-confluence-export --pages 12345 --include-children --format markdown
-
-# Export multiple parent pages with all their children
-confluence-export --pages 12345 67890 --include-children --format markdown
+confluence-export --pages "https://mysite.atlassian.net/wiki/spaces/DOCS/pages/123456789/My+Page+Title"
 ```
 
-### Exporting an Entire Space
+### Using Page IDs
+
+The numeric ID from the URL:
 
 ```bash
-# Export all pages from a space
-confluence-export --space MYSPACE --format markdown
-
-# Export a space to multiple formats
-confluence-export --space DOCS --format markdown html pdf --output ./space-backup
+confluence-export --pages 123456789
 ```
 
-### Output Options
+### From a File
+
+Create a file with URLs or IDs (one per line):
+
+```text
+# pages.txt - Lines starting with # are comments
+https://mysite.atlassian.net/wiki/spaces/DOCS/pages/123/Overview
+
+# Page IDs work too
+456789
+
+# Comma-separated on one line
+111222, 333444
+```
 
 ```bash
-# Specify output directory
-confluence-export --pages 12345 --format markdown --output ./my-exports
-
-# Use flat structure (all files in one directory)
-confluence-export --pages 12345 --include-children --format markdown --flat
-
-# Preserve hierarchy (default - creates nested folders)
-confluence-export --pages 12345 --include-children --format markdown
+confluence-export --pages-file pages.txt
 ```
 
-### All Options
+### Combine Methods
 
-```
-usage: confluence-export [-h] [--version] [--base-url URL] [--email EMAIL]
-                         [--token TOKEN] --pages PAGE [PAGE ...]
-                         [--include-children]
-                         [--format FORMAT [FORMAT ...]] [--output DIR]
-                         [--flat] [--skip-errors] [--no-skip-errors]
-                         [--verbose] [--quiet]
-
-Authentication:
-  --base-url URL        Confluence site URL (e.g., https://yoursite.atlassian.net)
-  --email EMAIL         Atlassian account email
-  --token TOKEN         Atlassian API token
-
-Page Selection:
-  --pages PAGE [PAGE ...] Page IDs or URLs to export. Can specify multiple.
-  --space SPACE_KEY     Export all pages from a space (e.g., 'MYSPACE')
-  --include-children    Recursively export all child pages
-
-Export Options:
-  --format FORMAT       Export format(s): markdown/md, html, txt/text, pdf
-  --output DIR, -o DIR  Output directory (default: ./confluence-exports)
-  --flat                Use flat file structure
-
-Advanced Options:
-  --skip-errors         Skip failed pages and continue (default: True)
-  --no-skip-errors      Stop on first error
-  --verbose, -v         Enable verbose output
-  --quiet, -q           Suppress all output except errors
+```bash
+confluence-export --pages 123456 --pages-file more-pages.txt
 ```
 
 ## Export Formats
 
-### Markdown (`--format markdown` or `--format md`)
+| Format | Flag | Description |
+|--------|------|-------------|
+| **Markdown** | `--format markdown` or `md` | Clean Markdown with Confluence macro support |
+| **HTML** | `--format html` | Standalone HTML with embedded CSS |
+| **Text** | `--format txt` or `text` | Plain text (great for search/archival) |
+| **PDF** | `--format pdf` | Native Confluence PDF export |
 
-Converts Confluence storage format to clean Markdown. Handles:
-- Headings, paragraphs, lists
-- Code blocks with language hints
-- Tables
-- Links and images
-- Confluence macros (info panels, expandable sections, etc.)
-- Task lists
+Export to multiple formats at once:
 
-### HTML (`--format html`)
-
-Exports as standalone HTML files with:
-- Embedded CSS styling
-- Responsive design
-- Clean, readable typography
-
-### Text (`--format txt` or `--format text`)
-
-Plain text export that:
-- Strips all HTML formatting
-- Preserves document structure
-- Great for full-text search or archival
-
-### PDF (`--format pdf`)
-
-Uses Confluence's native PDF export:
-- Preserves original formatting
-- Includes images and attachments
-- Maintains Confluence styling
-
-## Output Structure
-
-### Hierarchical (Default)
-
-When exporting with `--include-children`, files are organized in folders matching the page hierarchy:
-
-```
-confluence-exports/
-├── Parent-Page-12345.md
-├── Parent-Page/
-│   ├── Child-Page-1-23456.md
-│   ├── Child-Page-2-34567.md
-│   └── Child-Page-2/
-│       └── Grandchild-Page-45678.md
+```bash
+confluence-export --pages 123456 --format markdown html pdf
 ```
 
-### Flat (`--flat`)
+## Advanced Features
 
-All files are placed in a single directory with unique names:
+### Parallel Fetching
+
+Speed up large exports with parallel workers:
+
+```bash
+confluence-export --pages-file pages.txt --workers 8
+```
+
+### Export Manifest
+
+Generate an index of all exported pages:
+
+```bash
+confluence-export --pages 123456 --include-children --manifest
+```
+
+Creates `INDEX.md` and `manifest.json` in the output directory.
+
+### Configuration File
+
+Save your settings to avoid repeating them:
+
+```bash
+# Save current settings
+confluence-export --base-url https://mysite.atlassian.net \
+  --email user@example.com \
+  --output ./exports \
+  --format markdown html \
+  --save-config
+
+# Now just run with pages
+confluence-export --pages 123456
+```
+
+Configuration file (`.confluence-export.toml`):
+
+```toml
+[auth]
+base_url = "https://mysite.atlassian.net"
+email = "user@example.com"
+
+[pages]
+file = "pages.txt"  # Default pages file
+
+[export]
+output = "./exports"
+formats = ["markdown", "html"]
+include_children = true
+manifest = true
+
+[advanced]
+workers = 8
+```
+
+### Include Child Pages
+
+Recursively export all descendants:
+
+```bash
+confluence-export --pages 123456 --include-children
+```
+
+### Output Structure
+
+**Hierarchical (default)**:
+```
+exports/
+├── Parent-Page-123.md
+└── Parent-Page/
+    ├── Child-Page-456.md
+    └── Child-Page/
+        └── Grandchild-789.md
+```
+
+**Flat** (`--flat`):
+```
+exports/
+├── Parent-Page-123.md
+├── Child-Page-456.md
+└── Grandchild-789.md
+```
+
+## All Options
 
 ```
-confluence-exports/
-├── Parent-Page-12345.md
-├── Child-Page-1-23456.md
-├── Child-Page-2-34567.md
-└── Grandchild-Page-45678.md
+Authentication:
+  --base-url URL        Confluence site URL
+  --email EMAIL         Atlassian account email
+  --token TOKEN         Atlassian API token
+
+Page Selection:
+  --pages PAGE [PAGE ...]    Page IDs or URLs (space-separated)
+  --pages-file FILE          File with page IDs/URLs (one per line)
+  --space SPACE_KEY          Export all pages from a space
+  --include-children         Recursively export child pages
+
+Export Options:
+  --format FORMAT [...]  Export format(s): markdown, html, txt, pdf
+  --output, -o DIR       Output directory (default: ./confluence-exports)
+  --flat                 Flat file structure (no folders)
+  --manifest             Generate INDEX.md and manifest.json
+
+Advanced Options:
+  --workers, -w N        Parallel workers (default: 4)
+  --skip-errors          Skip failed pages (default: True)
+  --no-skip-errors       Stop on first error
+  --verbose, -v          Verbose output
+  --quiet, -q            Suppress output except errors
+
+Configuration:
+  --config, -c FILE      Config file path (auto-detected)
+  --save-config [FILE]   Save settings to config file
+  --no-config            Ignore config files
 ```
 
 ## Examples
 
-### Export an Entire Space Section
+### Backup an Entire Space
 
 ```bash
-# Export a top-level page and all its descendants
 confluence-export \
-  --pages 12345 \
+  --space DOCS \
+  --format markdown html pdf \
   --include-children \
-  --format markdown html \
-  --output ./documentation \
-  --verbose
+  --manifest \
+  --output "./backup-$(date +%Y%m%d)" \
+  --workers 8
 ```
 
-### Create a Backup
+### Export Documentation Section
 
 ```bash
-# Export everything to all formats
 confluence-export \
-  --pages 12345 67890 \
+  --pages "https://mysite.atlassian.net/wiki/spaces/DOCS/pages/123/Getting+Started" \
   --include-children \
-  --format markdown html txt pdf \
-  --output ./backup-$(date +%Y%m%d)
+  --format markdown \
+  --manifest \
+  --output ./docs
 ```
 
-### Quick Single Page Export
+### Quick Single Page
 
 ```bash
-# Export just one page to markdown
-confluence-export --pages 12345 -o ./
+confluence-export --pages 123456 -o ./
 ```
 
 ## Troubleshooting
 
 ### Authentication Errors
 
-- Verify your API token is valid and hasn't expired
+- Verify your API token at [Atlassian API Tokens](https://id.atlassian.com/manage-profile/security/api-tokens)
 - Ensure you're using the email associated with your Atlassian account
 - Check that your base URL is correct (should be `https://yoursite.atlassian.net`)
 
 ### Page Not Found
 
-- Verify the page ID is correct
+- Verify the page ID or URL is correct
 - Ensure you have permission to view the page
-- Try using the full page URL instead of just the ID
+- Check if the page is in a restricted space
 
 ### Rate Limiting
 
-The tool automatically handles rate limiting with exponential backoff. If you're exporting many pages, the process may slow down temporarily.
+The tool automatically handles rate limiting with exponential backoff. Large exports may temporarily slow down.
 
 ### PDF Export Fails
 
-PDF export requires additional permissions in Confluence. Ensure your account has export permissions for the target pages.
+PDF export requires additional permissions in Confluence. Ensure your account has export permissions.
 
 ## Development
-
-### Running Tests
 
 ```bash
 # Install dev dependencies
@@ -296,39 +315,26 @@ pip install -e ".[dev]"
 
 # Run tests
 pytest
-```
 
-### Project Structure
+# Run linter
+ruff check .
 
-```
-confluence-export/
-├── confluence_export/
-│   ├── __init__.py          # Package init
-│   ├── cli.py               # CLI entry point
-│   ├── client.py            # Confluence API client
-│   ├── fetcher.py           # Page fetching logic
-│   ├── utils.py             # Utility functions
-│   └── exporters/
-│       ├── __init__.py
-│       ├── base.py          # Base exporter class
-│       ├── markdown.py      # Markdown exporter
-│       ├── html.py          # HTML exporter
-│       ├── text.py          # Text exporter
-│       └── pdf.py           # PDF exporter
-├── requirements.txt
-├── setup.py
-└── README.md
+# Format code
+ruff format .
 ```
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Documentation
 
-- [README.md](README.md) - Quick start and overview
-- [GUIDE.md](GUIDE.md) - Complete user guide with detailed examples
+- [User Guide](docs/user-guide.md) - Complete user guide with detailed examples
+- [Configuration Guide](docs/configuration.md) - Config file options and examples
+- [API Reference](docs/api-reference.md) - Python API documentation
+- [Development Guide](docs/development.md) - Contributing and development setup
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.

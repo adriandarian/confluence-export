@@ -36,6 +36,7 @@ Confluence Export CLI is a command-line tool that allows you to export pages fro
 - Export all pages from a space with `--space`
 - Preserve folder structure or flatten to a single directory
 - Handle Confluence-specific content (macros, panels, code blocks, etc.)
+- Parallel fetching for improved performance
 
 ---
 
@@ -162,6 +163,10 @@ confluence-export \
 
 > ⚠️ **Security Note:** Command-line arguments may be visible in shell history.
 
+#### Option 4: Configuration File
+
+Create a `.confluence-export.toml` file. See [Configuration Guide](configuration.md) for details.
+
 ---
 
 ## Quick Start
@@ -223,10 +228,11 @@ confluence-export [OPTIONS]
 | Option | Description |
 |--------|-------------|
 | `--pages PAGE [PAGE ...]` | One or more page IDs or URLs to export |
+| `--pages-file FILE` | Path to file containing page IDs/URLs (one per line) |
 | `--space SPACE_KEY` | Export all pages from a space |
 | `--include-children` | Recursively include all child pages |
 
-> **Note:** You must specify either `--pages` or `--space` (or both).
+> **Note:** You must specify either `--pages`, `--pages-file`, or `--space` (or combine them).
 
 ### Export Options
 
@@ -235,17 +241,27 @@ confluence-export [OPTIONS]
 | `--format FORMAT [...]` | `markdown` | Export format(s): `markdown`, `md`, `html`, `txt`, `text`, `pdf` |
 | `--output DIR`, `-o DIR` | `./confluence-exports` | Output directory path |
 | `--flat` | Off | Put all files in one directory (no hierarchy) |
+| `--manifest` | Off | Generate manifest files (INDEX.md and manifest.json) |
 
 ### Advanced Options
 
 | Option | Default | Description |
 |--------|---------|-------------|
+| `--workers N`, `-w N` | `4` | Number of parallel workers for fetching |
 | `--skip-errors` | On | Continue exporting if a page fails |
 | `--no-skip-errors` | - | Stop on first error |
 | `--verbose`, `-v` | Off | Show detailed progress |
 | `--quiet`, `-q` | Off | Suppress all output except errors |
 | `--version` | - | Show version number |
 | `--help`, `-h` | - | Show help message |
+
+### Configuration Options
+
+| Option | Description |
+|--------|-------------|
+| `--config FILE`, `-c FILE` | Path to configuration file |
+| `--save-config [FILE]` | Save current settings to config file and exit |
+| `--no-config` | Ignore configuration files |
 
 ---
 
@@ -373,6 +389,24 @@ The tool automatically extracts the page ID from URLs in these formats:
 - `/wiki/spaces/SPACE/pages/ID/Title`
 - `/wiki/pages/viewpage.action?pageId=ID`
 
+### Using a Pages File
+
+Create a text file with one page ID or URL per line:
+
+```text
+# Documentation pages
+123456789
+234567890
+
+# API pages
+https://yoursite.atlassian.net/wiki/spaces/API/pages/345678901/Overview
+```
+
+Then use it with:
+```bash
+confluence-export --pages-file pages.txt --format markdown
+```
+
 ### Finding Space Keys
 
 The space key appears in page URLs after `/spaces/`:
@@ -435,6 +469,13 @@ For example:
 - `API-Reference-234567.html`
 
 The page ID ensures uniqueness even if titles are similar.
+
+### Manifest Files (`--manifest`)
+
+When using `--manifest`, two index files are created:
+
+- `INDEX.md` - Human-readable list of all exported pages
+- `manifest.json` - Machine-readable metadata for automation
 
 ---
 
@@ -513,6 +554,18 @@ This shows:
 - Individual export status
 - Detailed error messages
 
+### Parallel Fetching
+
+Control the number of parallel workers for faster exports:
+
+```bash
+# Use 8 workers for faster fetching
+confluence-export --pages 123456 --include-children --workers 8
+
+# Use single worker for rate-limited instances
+confluence-export --pages 123456 --include-children --workers 1
+```
+
 ---
 
 ## Troubleshooting
@@ -552,7 +605,7 @@ This shows:
 
 **Solution:** The tool automatically handles rate limiting with exponential backoff. Just wait for it to complete.
 
-**Prevention:** For large exports, run during off-peak hours.
+**Prevention:** For large exports, run during off-peak hours or reduce workers with `--workers 1`.
 
 ### PDF Export Fails
 
@@ -663,7 +716,14 @@ If you encounter bugs or have feature requests, please open an issue on the GitH
 
 ---
 
+## Related Documentation
+
+- [README](../README.md) - Quick start and overview
+- [Configuration Guide](configuration.md) - Config file options
+- [API Reference](api-reference.md) - Python API documentation
+- [Development Guide](development.md) - Contributing and development
+
+---
+
 *Happy exporting! 📚*
-
-
 
