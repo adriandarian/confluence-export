@@ -345,3 +345,4 @@ class TestMergeConfigWithArgs:
 
         assert args.workers == 16
 
+
