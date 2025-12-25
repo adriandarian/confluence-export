@@ -32,13 +32,13 @@ jobs:
         run: python -m build
       
       - name: Upload wheel artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: wheel-package
           path: dist/*.whl
       
       - name: Upload source distribution artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: source-distribution
           path: dist/*.tar.gz
@@ -86,7 +86,7 @@ jobs:
           chmod +x dist/confluence-export-macos-x86_64
       
       - name: Upload executable artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: executable-${{ matrix.os }}
           path: dist/confluence-export*
