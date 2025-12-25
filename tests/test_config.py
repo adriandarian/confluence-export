@@ -344,5 +344,3 @@ class TestMergeConfigWithArgs:
         merge_config_with_args(config, args)
 
         assert args.workers == 16
-
-

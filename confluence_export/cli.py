@@ -3,6 +3,7 @@
 import argparse
 import os
 import sys
+from pathlib import Path
 from typing import List, Optional
 
 from dotenv import load_dotenv
@@ -269,7 +270,7 @@ def read_pages_from_file(filepath: str) -> List[str]:
         FileNotFoundError: If the file doesn't exist
     """
     pages = []
-    with open(filepath, encoding="utf-8") as f:
+    with Path(filepath).open(encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             # Skip empty lines and comments

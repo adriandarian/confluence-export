@@ -321,9 +321,7 @@ class TestPagesFileArgument:
     def test_pages_and_pages_file_combined(self):
         """Test combining --pages and --pages-file."""
         parser = create_parser()
-        args = parser.parse_args(
-            ["--pages", "123", "456", "--pages-file", "more-pages.txt"]
-        )
+        args = parser.parse_args(["--pages", "123", "456", "--pages-file", "more-pages.txt"])
 
         assert args.pages == ["123", "456"]
         assert args.pages_file == "more-pages.txt"
