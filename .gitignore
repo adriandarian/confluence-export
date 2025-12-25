@@ -173,6 +173,11 @@ confluence-exports/
 exports/
 output/
 
+# Build artifacts
+build/
+dist/
+*.spec.bak
+
 # Secrets (never commit these!)
 *.pem
 *.key

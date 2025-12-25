@@ -1,37 +1,140 @@
 name: Release
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.0.1)'
+        required: true
+        type: string
 
 jobs:
-  build-and-publish:
-    name: Build and Publish to PyPI
+  build-wheel:
+    name: Build Wheel Package
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build wheel
+      
+      - name: Build wheel and source distribution
+        run: python -m build
+      
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-package
+          path: dist/*.whl
+      
+      - name: Upload source distribution artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-distribution
+          path: dist/*.tar.gz
+
+  build-executables:
+    name: Build Executables
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+      
+      - name: Build executable (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          pyinstaller confluence_export.spec --clean --noconfirm
+          mv dist/confluence-export dist/confluence-export-linux-x86_64
+          chmod +x dist/confluence-export-linux-x86_64
+      
+      - name: Build executable (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          pyinstaller confluence_export.spec --clean --noconfirm
+          if exist dist\confluence-export.exe (
+            move dist\confluence-export.exe dist\confluence-export-windows-x86_64.exe
+          )
+      
+      - name: Build executable (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          pyinstaller confluence_export.spec --clean --noconfirm
+          mv dist/confluence-export dist/confluence-export-macos-x86_64
+          chmod +x dist/confluence-export-macos-x86_64
+      
+      - name: Upload executable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: executable-${{ matrix.os }}
+          path: dist/confluence-export*
+
+  create-release:
+    name: Create Release and Publish to PyPI
+    needs: [build-wheel, build-executables]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
     environment:
       name: pypi
       url: https://pypi.org/p/confluence-export
     permissions:
-      id-token: write  # Required for trusted publishing
-
+      id-token: write  # Required for PyPI trusted publishing
+      contents: write  # Required for creating releases
     steps:
       - uses: actions/checkout@v4
-
+      
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-
+          python-version: '3.11'
+      
       - name: Install build tools
         run: |
           python -m pip install --upgrade pip
           pip install build
-
-      - name: Build package
+      
+      - name: Build package for PyPI
         run: python -m build
-
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            release-artifacts/**/*
+            dist/*.whl
+            dist/*.tar.gz
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-
-
-

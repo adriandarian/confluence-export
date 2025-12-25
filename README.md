@@ -323,6 +323,72 @@ ruff check .
 ruff format .
 ```
 
+## Building Distribution Packages
+
+### Building Wheel Package
+
+The wheel package can be installed via pip and requires Python to be installed:
+
+```bash
+# Install build tools
+pip install build wheel
+
+# Build wheel package
+python -m build --wheel
+
+# The wheel will be in dist/confluence_export-*.whl
+# Install it with: pip install dist/confluence_export-*.whl
+```
+
+### Building Standalone Executables
+
+Standalone executables don't require Python to be installed. They're perfect for users who just want to run the tool without setting up Python.
+
+#### Prerequisites
+
+```bash
+pip install pyinstaller
+```
+
+#### Building
+
+**Linux/macOS:**
+```bash
+./scripts/build.sh
+```
+
+**Windows:**
+```cmd
+scripts\build.bat
+```
+
+**Manual build:**
+```bash
+pyinstaller confluence_export.spec --clean --noconfirm
+```
+
+The executable will be in `dist/confluence-export` (or `dist/confluence-export.exe` on Windows).
+
+#### Using the Executable
+
+After building, users can run the executable directly:
+
+```bash
+# Linux/macOS
+./dist/confluence-export --help
+
+# Windows
+dist\confluence-export.exe --help
+```
+
+### Automated Builds (GitHub Actions)
+
+The project includes a GitHub Actions workflow that automatically builds:
+- Wheel packages for PyPI
+- Standalone executables for Linux, Windows, and macOS
+
+The workflow triggers on version tags (e.g., `v1.0.0`) and creates a GitHub release with all artifacts.
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.

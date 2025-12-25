@@ -566,12 +566,19 @@ git push origin main --tags
 
 ### Building Distribution
 
+#### Building Wheel Package
+
+The wheel package can be installed via pip and requires Python to be installed:
+
 ```bash
 # Install build tools
-pip install build twine
+pip install build wheel
 
-# Build
-python -m build
+# Build wheel package
+python -m build --wheel
+
+# The wheel will be in dist/confluence_export-*.whl
+# Install it with: pip install dist/confluence_export-*.whl
 
 # Check distribution
 twine check dist/*
@@ -579,6 +586,43 @@ twine check dist/*
 # Upload to PyPI (when ready)
 twine upload dist/*
 ```
+
+#### Building Standalone Executables
+
+Standalone executables don't require Python to be installed. They're perfect for users who just want to run the tool without setting up Python.
+
+**Prerequisites:**
+```bash
+pip install pyinstaller
+```
+
+**Using build scripts:**
+
+Linux/macOS:
+```bash
+./scripts/build.sh
+```
+
+Windows:
+```cmd
+scripts\build.bat
+```
+
+**Manual build:**
+```bash
+pyinstaller confluence_export.spec --clean --noconfirm
+```
+
+The executable will be in `dist/confluence-export` (or `dist/confluence-export.exe` on Windows).
+
+**Cross-platform builds:**
+
+To build executables for all platforms, you'll need to:
+1. Use GitHub Actions (automated on tag push)
+2. Use Docker containers for each platform
+3. Use native VMs/containers for each OS
+
+The project includes a GitHub Actions workflow (`.github/workflows/build-release.yml`) that automatically builds executables for Linux, Windows, and macOS when you push a version tag.
 
 ---
 
