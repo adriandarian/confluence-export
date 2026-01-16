@@ -237,10 +237,10 @@ class PageFetcher:
         skip_errors: bool = True,
     ) -> List[PageData]:
         """
-        Fetch a page and all its descendant pages with parallel fetching.
+        Fetch a page/folder and all its descendant pages with parallel fetching.
 
         Args:
-            page_id: The root page ID
+            page_id: The root page or folder ID
             include_root: Whether to include the root page itself
             include_body: Whether to fetch the page body content
             skip_errors: If True, skip pages that fail to fetch; otherwise raise
@@ -249,9 +249,20 @@ class PageFetcher:
             List of PageData instances (root first if included, then descendants)
         """
         pages = []
+        is_folder = False
 
-        # Fetch root page if requested
-        if include_root:
+        # Check if it's a folder
+        if not self.quiet:
+            console.print("  [dim]Checking content type...[/dim]")
+        
+        try:
+            content_info = self.client.get_content_info(page_id)
+            is_folder = content_info.get("type") == "folder"
+        except ConfluenceAPIError:
+            pass
+
+        # Fetch root page if requested (folders don't have body content)
+        if include_root and not is_folder:
             self._log(f"Fetching root page {page_id}...")
             try:
                 root_page = self._fetch_page_content(page_id, include_body=include_body)
@@ -273,13 +284,13 @@ class PageFetcher:
             root_title = pages[0].title
         else:
             try:
-                root_data = self.client.get_page(page_id, include_body=False)
+                root_data = self.client.get_content_info(page_id)
                 root_title = root_data.get("title", "")
             except ConfluenceAPIError:
                 pass
 
         # First, discover all descendants (quick operation)
-        descendant_info = self._discover_descendants(page_id, skip_errors=skip_errors)
+        descendant_info = self._discover_descendants(page_id, skip_errors=skip_errors, is_folder=is_folder)
 
         if not self.quiet and descendant_info:
             console.print(f"  [dim]Found {len(descendant_info)} child pages[/dim]")
@@ -302,15 +313,17 @@ class PageFetcher:
         parent_path: Optional[List[str]] = None,
         depth: int = 0,
         skip_errors: bool = True,
+        is_folder: bool = False,
     ) -> List[Dict[str, Any]]:
         """
-        Recursively discover all descendants of a page (metadata only).
+        Recursively discover all descendants of a page/folder (metadata only).
 
         Args:
-            page_id: The parent page ID
+            page_id: The parent page or folder ID
             parent_path: List of parent page titles for hierarchy
             depth: Current depth in the hierarchy
             skip_errors: If True, skip pages that fail to fetch
+            is_folder: Whether the root is a folder (uses ancestor search)
 
         Returns:
             List of dictionaries with descendant info
@@ -321,36 +334,69 @@ class PageFetcher:
         descendants = []
 
         try:
-            children = self.client.get_page_children(page_id)
+            # For folders, get all descendants at once using ancestor search
+            if is_folder and depth == 0:
+                all_descendants = self.client.get_folder_contents_by_ancestor(page_id)
+                # Build hierarchy information and filter to only pages (not folders)
+                for item in all_descendants:
+                    # Skip folders - only include pages
+                    if item.get("type") == "folder":
+                        continue
+                    
+                    item_id = str(item.get("id", ""))
+                    item_title = item.get("title", "Untitled")
+                    ancestors = item.get("ancestors", [])
+                    
+                    # Build the hierarchy path from ancestors
+                    hier_path = []
+                    for ancestor in ancestors:
+                        ancestor_id = str(ancestor.get("id", ""))
+                        ancestor_title = ancestor.get("title", "Untitled")
+                        # Skip the root folder itself in the path
+                        if ancestor_id != page_id:
+                            hier_path.append(ancestor_title)
+                    
+                    descendants.append({
+                        "id": item_id,
+                        "title": item_title,
+                        "parent_path": hier_path,
+                        "depth": len(hier_path),
+                        "parent_id": ancestors[-1].get("id") if ancestors else page_id,
+                    })
+            else:
+                # For regular pages, use standard children endpoint
+                children = self.client.get_page_children(page_id)
+                
+                for child_data in children:
+                    child_id = str(child_data.get("id", ""))
+                    child_title = child_data.get("title", "Untitled")
+
+                    # Store info for later fetching
+                    descendants.append(
+                        {
+                            "id": child_id,
+                            "title": child_title,
+                            "parent_path": parent_path.copy(),
+                            "depth": depth + 1,
+                            "parent_id": page_id,
+                        }
+                    )
+
+                    # Recursively discover this child's descendants
+                    child_descendants = self._discover_descendants(
+                        child_id,
+                        parent_path=[*parent_path, child_title],
+                        depth=depth + 1,
+                        skip_errors=skip_errors,
+                        is_folder=False,
+                    )
+                    descendants.extend(child_descendants)
+
         except ConfluenceAPIError as e:
             if skip_errors:
                 self._log(f"Warning: Failed to get children of page {page_id}: {e}")
                 return []
             raise
-
-        for child_data in children:
-            child_id = str(child_data.get("id", ""))
-            child_title = child_data.get("title", "Untitled")
-
-            # Store info for later fetching
-            descendants.append(
-                {
-                    "id": child_id,
-                    "title": child_title,
-                    "parent_path": parent_path.copy(),
-                    "depth": depth + 1,
-                    "parent_id": page_id,
-                }
-            )
-
-            # Recursively discover this child's descendants
-            child_descendants = self._discover_descendants(
-                child_id,
-                parent_path=[*parent_path, child_title],
-                depth=depth + 1,
-                skip_errors=skip_errors,
-            )
-            descendants.extend(child_descendants)
 
         return descendants
 

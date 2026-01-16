@@ -146,6 +146,20 @@ class ConfluenceClient:
             f"Request failed after {self.max_retries} attempts: {last_exception!s}"
         )
 
+    def get_content_info(self, content_id: str) -> Dict[str, Any]:
+        """
+        Get content info (page or folder) by its ID using v1 API.
+
+        Args:
+            content_id: The content ID (page or folder)
+
+        Returns:
+            Content data dictionary with type information
+        """
+        params = {"expand": "space"}
+        response = self._make_request("GET", f"/content/{content_id}", api_version="v1", params=params)
+        return response.json()
+
     def get_page(self, page_id: str, include_body: bool = True) -> Dict[str, Any]:
         """
         Get a page by its ID.
@@ -187,6 +201,81 @@ class ConfluenceClient:
                 return body_data[body_format].get("value", "")
 
         return ""
+
+    def get_folder_children(self, folder_id: str, limit: int = 250) -> List[Dict[str, Any]]:
+        """
+        Get all child pages of a folder.
+
+        Args:
+            folder_id: The folder ID
+            limit: Maximum number of children to fetch per request
+
+        Returns:
+            List of child page data dictionaries
+        """
+        children = []
+        cursor = None
+
+        while True:
+            params = {"limit": limit}
+            if cursor:
+                params["cursor"] = cursor
+
+            response = self._make_request("GET", f"/pages/{folder_id}/children", params=params)
+            data = response.json()
+
+            results = data.get("results", [])
+            children.extend(results)
+
+            # Check for more pages
+            links = data.get("_links", {})
+            if "next" not in links:
+                break
+
+            # Extract cursor from next link
+            next_link = links["next"]
+            if "cursor=" in next_link:
+                cursor = next_link.split("cursor=")[1].split("&")[0]
+            else:
+                break
+
+        return children
+
+    def get_folder_contents_by_ancestor(self, folder_id: str, limit: int = 250) -> List[Dict[str, Any]]:
+        """
+        Get all pages/folders under a folder using CQL ancestor search.
+
+        Args:
+            folder_id: The folder ID
+            limit: Maximum number of items to fetch per request (default 250 for optimal API performance)
+
+        Returns:
+            List of page/folder data dictionaries
+        """
+        items = []
+        start = 0
+
+        while True:
+            params = {
+                "cql": f"ancestor = {folder_id}",
+                "limit": limit,
+                "start": start,
+                "expand": "ancestors",
+            }
+
+            response = self._make_request("GET", "/content/search", api_version="v1", params=params)
+            data = response.json()
+
+            results = data.get("results", [])
+            items.extend(results)
+
+            # Check if there are more results
+            if len(results) < limit:
+                break
+
+            start += limit
+
+        return items
 
     def get_page_children(self, page_id: str, limit: int = 250) -> List[Dict[str, Any]]:
         """

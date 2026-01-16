@@ -38,13 +38,14 @@ def extract_page_id_from_url(url: str) -> Optional[str]:
 
     Supports formats like:
     - https://site.atlassian.net/wiki/spaces/SPACE/pages/123456/Page+Title
+    - https://site.atlassian.net/wiki/spaces/SPACE/folder/123456
     - https://site.atlassian.net/wiki/pages/viewpage.action?pageId=123456
 
     Args:
-        url: The Confluence page URL
+        url: The Confluence page or folder URL
 
     Returns:
-        The page ID as a string, or None if not found
+        The page/folder ID as a string, or None if not found
     """
     # Check if it's a URL or just an ID
     if url.isdigit():
@@ -61,10 +62,10 @@ def extract_page_id_from_url(url: str) -> Optional[str]:
             if match:
                 return match.group(1)
 
-        # Check for /pages/ID/ pattern
-        match = re.search(r"/pages/(\d+)", path)
+        # Check for /pages/ID/ or /folder/ID/ pattern
+        match = re.search(r"/(pages|folder)/(\d+)", path)
         if match:
-            return match.group(1)
+            return match.group(2)
 
         return None
     except Exception:
